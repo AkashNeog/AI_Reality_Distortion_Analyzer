@@ -5,31 +5,27 @@ try:
 except LookupError:
     nltk.download('punkt')
 
-try:
-    nltk.data.find('tokenizers/punkt_tab')
-except LookupError:
-    nltk.download('punkt_tab')
 from nltk.tokenize import sent_tokenize
+
 from transformers import pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
-
 def preprocess_text(text):
-    sentences = sent_tokenize(text)
-    return sentences
+    return sent_tokenize(text)
 
 
 emotion_model = pipeline(
     "text-classification",
-    model="j-hartmann/emotion-english-distilroberta-base",
-    return_all_scores=True
+    model="j-hartmann/emotion-english-distilroberta-base"
 )
 
 def detect_emotion(sentence):
-    result = emotion_model(sentence)[0]
-    top_emotion = max(result, key=lambda x: x['score'])
-    return top_emotion['label'], round(top_emotion['score'], 2)
+    try:
+        result = emotion_model(sentence)[0]
+        return result['label'], round(result['score'], 2)
+    except:
+        return "neutral", 0.5
 
 
 texts = [
@@ -57,7 +53,7 @@ def classify_fact_opinion(sentence):
 
 
 def detect_manipulation(sentence, emotion):
-    manipulation_keywords = [
+    keywords = [
         "act now", "before it's too late",
         "everyone is doing this", "you must",
         "this will destroy", "urgent",
@@ -65,10 +61,10 @@ def detect_manipulation(sentence, emotion):
         "shocking truth", "they don't want you to know"
     ]
 
-    sentence_lower = sentence.lower()
+    s = sentence.lower()
 
-    for word in manipulation_keywords:
-        if word in sentence_lower:
+    for word in keywords:
+        if word in s:
             return "Urgency / Pressure"
 
     if emotion in ["fear", "anger"]:
@@ -97,10 +93,10 @@ def generate_explanation(type_label, manipulation, emotion):
         return f"This sentence uses {manipulation.lower()} and {emotion} emotion to influence the reader."
 
     elif type_label == "opinion":
-        return "This sentence expresses a personal belief rather than a verifiable fact."
+        return "This is an opinion and not a verifiable fact."
 
     else:
-        return "This sentence appears to present factual information."
+        return "This appears to be factual information."
 
 
 def analyze_text(text):
