@@ -1,18 +1,15 @@
-import nltk
-
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-
-from nltk.tokenize import sent_tokenize
 
 from transformers import pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
+
+
 def preprocess_text(text):
-    return sent_tokenize(text)
+    sentences = text.replace("!", ".").replace("?", ".").split(".")
+    sentences = [s.strip() for s in sentences if s.strip() != ""]
+    return sentences
+
 
 
 emotion_model = pipeline(
@@ -26,6 +23,7 @@ def detect_emotion(sentence):
         return result['label'], round(result['score'], 2)
     except:
         return "neutral", 0.5
+
 
 
 texts = [
@@ -52,6 +50,7 @@ def classify_fact_opinion(sentence):
     return fact_model.predict(vec)[0]
 
 
+
 def detect_manipulation(sentence, emotion):
     keywords = [
         "act now", "before it's too late",
@@ -73,6 +72,7 @@ def detect_manipulation(sentence, emotion):
     return "None"
 
 
+
 def calculate_score(type_label, manipulation, emotion_score):
     score = 100
 
@@ -88,6 +88,7 @@ def calculate_score(type_label, manipulation, emotion_score):
     return max(score, 0)
 
 
+
 def generate_explanation(type_label, manipulation, emotion):
     if manipulation != "None":
         return f"This sentence uses {manipulation.lower()} and {emotion} emotion to influence the reader."
@@ -97,6 +98,7 @@ def generate_explanation(type_label, manipulation, emotion):
 
     else:
         return "This appears to be factual information."
+
 
 
 def analyze_text(text):
