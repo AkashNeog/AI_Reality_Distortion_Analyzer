@@ -1,6 +1,14 @@
 import nltk
-nltk.download('punkt')
 
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
+try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    nltk.download('punkt_tab')
 from nltk.tokenize import sent_tokenize
 from transformers import pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
